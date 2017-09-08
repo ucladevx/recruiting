@@ -1,108 +1,136 @@
-const bcrypt = require('bcryptjs');
-const uuid = require('uuid');
 const _ = require('underscore');
+const bcrypt = require('bcryptjs');
 
-const SALT_ROUNDS = 8;
+const HASH_ROUNDS = 8;
 
-module.exports = mongoose => {
+module.exports = (Sequelize, db) => {
   /*********************************
    * SCHEMA
    *********************************/
 
-  const UserSchema = new mongoose.Schema({
-    id: {
-      type: String,
-      index: true,
-      unique: true,
-      default: () => uuid.v4().split('-').pop(),
-    },
-    email: {
-      type: String,
-      lowercase: true,
-      required: true,
-      unique: true,
-      index: true,
-      trim: true,
-    },
-    hash: {
-      type: String,
-      required: true,
-    },
-    accountCreated: {
-      type: Date,
-      default: () => new Date(),
-    },
-    lastLogin: {
-      type: Date,
-    },
-    state: {
-      type: String,
-      default: 'ACTIVE',
-      enum: {
-        values: ['ACTIVE', 'BLOCKED'],
-        message: 'Invalid account state: `{VALUE}`',
-      }
-    },
-    accessType: {
-      type: String,
-      default: 'STANDARD',
-      enum: {
-        values: ['STANDARD', 'ADMIN', 'RESTRICTED'],
-        message: 'Invalid access type: `{VALUE}`',
-      }
-    }
-  });
+	const User = db.define('user', {
+		id: {
+      type: Sequelize.STRING,
+      primaryKey: true,
+      defaultValue: () => uuid.v4().split('-').pop(),
+		},
 
+		// email address of the user
+		email: {
+			type: Sequelize.STRING,
+			allowNull: false,
+			unique: true,
+			validate: {
+				isEmail: {
+					msg: "The email you entered is not valid"
+				},
+				notEmpty: {
+					msg: "The email is a required field"
+				}
+			}
+		},
+
+		// type of account
+		//   RESTRICTED - not used currently
+		//   STANDARD   - a regular member
+		//   ADMIN      - admin type user
+		accessType: {
+			type: Sequelize.ENUM('RESTRICTED','STANDARD','ADMIN'),
+			defaultValue: 'STANDARD'
+		},
+
+		// account state
+		//   PENDING        - account pending activation (newly created)
+		//   ACTIVE         - account activated and in good standing
+		//   BLOCKED        - account is blocked, login is denied
+		//   PASSWORD_RESET - account has requested password reset
+		state: {
+			type: Sequelize.ENUM('PENDING', 'ACTIVE', 'BLOCKED', 'PASSWORD_RESET'),
+			defaultValue: 'PENDING'
+		},
+
+		// user's password hash
+		hash: {
+			type: Sequelize.STRING,
+			allowNull: false,
+			validate: {
+				notEmpty: {
+					msg: "The password cannot be empty"
+				}
+			}
+		},
+
+		// date account created
+		accountCreated: {
+			type: Sequelize.DATE,
+			defaultValue: Sequelize.NOW
+		},
+    
+    // date of last login
+    lastLogin: {
+      type: Sequelize.DATE,
+      defaultValue: Sequelize.NOW
+    },
+	}, {
+		// creating indices on frequently accessed fields improves efficiency
+		indexes: [
+			// a hash index on the uuid makes lookup by UUID O(1)
+			{
+				unique: true,
+				fields: ['id']
+			},
+
+			// a hash index on the email makes lookup by email O(1)
+			{
+				unique: true,
+				fields: ['email']
+			},
+		]
+  });
+  
   /*********************************
    * STATICS
    *********************************/
 
-  UserSchema.statics.findByEmail = function(email) {
-    const promise = this.findOne({ email }).exec();
-    console.log(promise);
-    return promise;
-  };
+	User.findById = function(id) {
+		return this.findOne({ where : { id } });
+	};
 
-  UserSchema.statics.findById = function(id) {
-    return this.findOne({ id }).exec();
-  };
+	User.findByEmail = function(email) {
+		return this.findOne({ where : { email } });
+	};
 
-  UserSchema.statics.generateHash = function(password) {
-    return bcrypt.hash(password, SALT_ROUNDS);
+	User.generateHash = function(password) {
+		return bcrypt.hash(password, HASH_ROUNDS);
   };
-
+  
   /*********************************
    * METHODS
    *********************************/
 
-  UserSchema.methods.verifyPassword = function(password) {
-    return bcrypt.compare(password, this.hash);
-  }
+	User.prototype.verifyPassword = function(password) {
+		return bcrypt.compare(password, this.getDataValue('hash'));
+	};
 
-  UserSchema.methods.isAdmin = function() {
-    return this.accessType === 'ADMIN';
-  }
+	User.prototype.isAdmin = function() {
+		return this.getDataValue('accessType') === 'ADMIN';
+	};
 
-  /*********************************
-   * CREATE MODEL
-   *********************************/
+	User.prototype.isStandard = function() {
+		return this.getDataValue('accessType') === 'STANDARD';
+	};
 
-  const User = mongoose.model('User', UserSchema);
+	User.prototype.isActive = function() {
+		return this.getDataValue('state') === 'ACTIVE';
+	};
 
-  /*********************************
-   * VALIDATORS
-   *********************************/
+	User.prototype.isPending = function() {
+		return this.getDataValue('state') === 'PENDING';
+	};
 
-  User.schema.path('email').validate(value => {
-    return /^.{2,}\@([^\.\@]{1,}\.)*ucla\.edu$/.test(value);
-  }, 'A valid UCLA email is required.');
+	User.prototype.isBlocked = function() {
+		return this.getDataValue('state') === 'BLOCKED';
+	};
 
-  User.schema.path('email').validate((value, respond) => {
-    User
-      .findByEmail(value)
-      .then(user => respond(!user))
-      .catch(err => respond(true));
-  }, 'This email is already registered');
-
-  return User;
-}
+	return User;
+};

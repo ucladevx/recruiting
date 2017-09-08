@@ -1,6 +1,6 @@
 default: build run
 
-dev: build run-dev
+dev: build-dev run-dev
 
 setup:
 	if [ ! -f app/config/SESSION_SECRET ]; then \
@@ -27,11 +27,14 @@ update:
 	git pull origin master
 	git submodule update --init --recursive
 
+build-dev:
+	sudo docker-compose -f docker-compose.dev.yml build
+
 build:
 	sudo docker-compose build
 
 run-dev:
-	sudo docker-compose up
+	sudo docker-compose -f docker-compose.dev.yml up --remove-orphans
 
 run:
 	sudo docker-compose up -d
@@ -42,11 +45,11 @@ logs:
 nginx-logs:
 	sudo docker exec -it $$(sudo docker ps | grep "devx/recruiting-ui" | cut -d' ' -f1) tail -f /var/log/nginx/access.log
 
-mongo:
-	sudo docker exec -it $$(sudo docker ps | grep "mongo" | cut -d' ' -f1) mongo
+psql:
+	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) psql -U user
 
-# pg_bkup:
-	# sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) /bin/ash -c 'pg_dump -U postgres > "/backup/pg_bkup_$(shell date --iso-8601=minutes)"'
+pg_bkup:
+	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) /bin/ash -c 'pg_dump -U postgres > "/backup/pg_bkup_$(shell date --iso-8601=minutes)"'
 
 stop:
 	sudo docker-compose down
@@ -55,7 +58,7 @@ reset: stop
 	-sudo docker rm $$(sudo docker ps -aq)
 	-sudo docker rmi devx/recruiting
 	-sudo docker rmi devx/recruiting-ui
-	-sudo docker volume rm mongo_data
-	-sudo docker volume rm recruiting_mongo_data
+	-sudo docker volume rm postgres_data
+	-sudo docker volume rm recruiting_postgres_data
 
-.PHONY: mongo_bkup
+.PHONY: pg_bkup

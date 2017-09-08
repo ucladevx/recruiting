@@ -11,7 +11,10 @@ module.exports = {
   numCPUs: process.env.NUM_WORKERS || require('os').cpus().length,
 
   database: {
-    mongo: `mongodb://${process.env.MONGO_HOST}/${process.env.MONGO_DB}`,
+    host: process.env.PG_HOST,
+    user: process.env.PG_USER,
+    pass: process.env.PG_PASS,
+    db: process.env.PG_DB,
   },
 
   logging: {

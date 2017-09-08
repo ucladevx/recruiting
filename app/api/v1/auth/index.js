@@ -57,9 +57,7 @@ router.post("/login", (req, res, next) => {
 		return next(new error.BadRequest('Password must be provided'));
 
   let userInfo = null;
-  console.log(req.body);
 	User.findByEmail(req.body.email.toLowerCase()).then(user => {
-    console.log(user);
 		if (!user)
 			throw new error.UserError('Invalid email or password');
 
@@ -77,9 +75,7 @@ router.post("/login", (req, res, next) => {
 	}).then(token => {
 		// respond with the token upon successful login
 		res.json({ error: null, token: token });
-	}).catch(err => {
-    console.error(err); next(err)
-  });
+	}).catch(next);
 });
 
 /**
