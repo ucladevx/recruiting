@@ -1,0 +1,37 @@
+version: '3.1'
+
+services:
+  postgres:
+    image: postgres:9.5-alpine
+    ports:
+      - "5432"
+    volumes:
+      - postgres_data:/data/db
+      - ./pg_bkup:/backup
+
+  node:
+    build: .
+    image: devx/recruiting
+    ports:
+      - "8080:8080"
+    links:
+      - postgres
+    restart: always
+    env_file:
+      - node.env
+
+  nginx:
+    build: ./ui
+    image: devx/recruiting-ui
+    links:
+      - node
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "./certs:/etc/nginx/certs:ro"
+      - "./certs-data:/data/letsencrypt"
+
+volumes:
+  postgres_data:
