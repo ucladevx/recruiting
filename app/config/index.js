@@ -17,6 +17,10 @@ module.exports = {
     db: process.env.PG_DB,
   },
 
+  session: {
+    secret: fs.readFileSync('app/config/SESSION_SECRET', 'utf-8'),
+  },
+
   logging: {
     level: 'debug',
     dbLevel: 'info',

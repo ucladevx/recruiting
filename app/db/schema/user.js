@@ -1,4 +1,5 @@
 const _ = require('underscore');
+const uuid = require('uuid');
 const bcrypt = require('bcryptjs');
 
 const HASH_ROUNDS = 8;
@@ -10,9 +11,9 @@ module.exports = (Sequelize, db) => {
 
 	const User = db.define('user', {
 		id: {
-      type: Sequelize.STRING,
-      primaryKey: true,
-      defaultValue: () => uuid.v4().split('-').pop(),
+			type: Sequelize.STRING,
+			primaryKey: true,
+			defaultValue: () => uuid.v4().split('-').pop(),
 		},
 
 		// email address of the user
@@ -65,16 +66,16 @@ module.exports = (Sequelize, db) => {
 			type: Sequelize.DATE,
 			defaultValue: Sequelize.NOW
 		},
-    
-    // date of last login
-    lastLogin: {
-      type: Sequelize.DATE,
-      defaultValue: Sequelize.NOW
-    },
+	
+		// date of last login
+		lastLogin: {
+			type: Sequelize.DATE,
+			defaultValue: Sequelize.NOW
+		},
 	}, {
 		// creating indices on frequently accessed fields improves efficiency
 		indexes: [
-			// a hash index on the uuid makes lookup by UUID O(1)
+			// a hash index on the id makes lookup by id O(1)
 			{
 				unique: true,
 				fields: ['id']
@@ -88,9 +89,9 @@ module.exports = (Sequelize, db) => {
 		]
   });
   
-  /*********************************
-   * STATICS
-   *********************************/
+	/*********************************
+	 * STATICS
+	 *********************************/
 
 	User.findById = function(id) {
 		return this.findOne({ where : { id } });
@@ -102,11 +103,11 @@ module.exports = (Sequelize, db) => {
 
 	User.generateHash = function(password) {
 		return bcrypt.hash(password, HASH_ROUNDS);
-  };
+	};
   
-  /*********************************
-   * METHODS
-   *********************************/
+	/*********************************
+	 * METHODS
+	 *********************************/
 
 	User.prototype.verifyPassword = function(password) {
 		return bcrypt.compare(password, this.getDataValue('hash'));

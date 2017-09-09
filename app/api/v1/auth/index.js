@@ -96,11 +96,10 @@ router.post("/register", (req, res, next) => {
   const password = req.body.user.password;
   // create the password hash
 	User.generateHash(password).then(hash => {
-		userModel.hash = hash;
 		// add the user to the DB
 		return User.create({
-      email, hash
-    });
+			email, hash
+		});
 	}).then(user => {
 		// responsd with the newly created user
 		res.json({ error: null });

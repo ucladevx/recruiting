@@ -6,13 +6,15 @@ const Sequelize = require('sequelize');
 const db = new Sequelize(config.database.db, config.database.user, config.database.pass, {
   dialect: 'postgres',
   host: config.database.host,
-  logging: config.isDevelopment ? logger.debug : false,
+  logging: false,
 });
 
 /**
  * Create models from schemas
  */
 const User = require('./schema/user')(Sequelize, db);
+const Season = require('./schema/season')(Sequelize, db);
+const Application = require('./schema/application')(Sequelize, db);
 
 /**
  * DB setup function to sync tables and add admin if doesn't exist
@@ -39,6 +41,8 @@ const errorHandler = (err, req, res, next) => {
 
 module.exports = {
   User,
+  Season,
+  Application,
   errorHandler,
   setup,
 };
