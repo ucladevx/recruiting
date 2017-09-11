@@ -61,6 +61,12 @@ class NotFound extends HTTPError {
 	}
 }
 
+class MethodNotAllowed extends HTTPError {
+	constructor(message) {
+		super(405, message || "Method Not Allowed");
+	}
+}
+
 class Unprocessable extends HTTPError {
 	constructor(message) {
 		super(422, message || "Unprocessable request");
@@ -130,4 +136,18 @@ const notFoundHandler = (req, res, next) => {
 	});
 };
 
-module.exports = { HTTPError, UserError, BadRequest, Unauthorized, Forbidden, NotFound, TooManyRequests, InternalServerError, NotImplemented, NotAvailable, errorHandler, notFoundHandler };
+module.exports = {
+	HTTPError,
+	UserError,
+	BadRequest,
+	Unauthorized,
+	Forbidden,
+	NotFound,
+	MethodNotAllowed,
+	TooManyRequests,
+	InternalServerError,
+	NotImplemented,
+	NotAvailable,
+	errorHandler,
+	notFoundHandler
+};

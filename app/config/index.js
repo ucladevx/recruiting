@@ -24,5 +24,5 @@ module.exports = {
   logging: {
     level: 'debug',
     dbLevel: 'info',
-  }
-}
+  },
+};

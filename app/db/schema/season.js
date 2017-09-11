@@ -13,13 +13,13 @@ module.exports = (Sequelize, db) => {
 			defaultValue: () => uuid.v4().split('-').pop(),
 		},
 
-		// email address of the user
-		title: {
+		// name of recruiting season (e.g. Fall 2017)
+		name: {
 			type: Sequelize.STRING,
 			allowNull: false,
 			validate: {
 				notEmpty: {
-					msg: "The recruiting season title is a required field"
+					msg: "The recruiting season name is a required field"
 				}
 			}
 		},
@@ -28,12 +28,22 @@ module.exports = (Sequelize, db) => {
 		startDate: {
 			type: Sequelize.DATE,
 			allowNull: false,
+			validate: {
+				notEmpty: {
+					msg: "The recruiting season start date is a required field"
+				}
+			}
 		},
 		
 		// end date+time of recruiting season
 		endDate: {
 			type: Sequelize.DATE,
 			allowNull: false,
+			validate: {
+				notEmpty: {
+					msg: "The recruiting season end date is a required field"
+				}
+			}
 		},
 	}, {
 		// creating indices on frequently accessed fields improves efficiency
@@ -71,18 +81,60 @@ module.exports = (Sequelize, db) => {
 	Season.findForDate = function(date) {
 		return this.findOne({
 			where: {
-				startDate : { $lt : now },
-				endDate   : { $gt : now },
+				startDate : { $lt : date },
+				endDate   : { $gt : date },
 			}
 		});
 	};
+
+	Season.getLatest = function() {
+		return this.findOne({
+			order: [['startDate', 'DESC']]
+		});
+	};
+
+	Season.findForDates = function(start, end) {
+		// not:
+		//  - dbStart---------------dbEnd   start----------------end
+		//    or
+		//  -  start---------------end    dbStart----------------dbEnd
+		return this.findAll({
+			where: {
+				$not: {
+					$or: {
+						startDate : { $gt: end },
+						endDate   : { $lt: start },
+					}
+				}
+			}
+		});
+	}
+
+	Season.destroyById = function(id) {
+		return this.destroy({ where: { id } });
+	}
+
+	Season.sanitize = function(season) {
+		const obj = _.pick(season, ['name', 'startDate', 'endDate']);
+		if (obj.startDate) {
+			obj.startDate = new Date(obj.startDate);
+			if (isNaN(obj.startDate))
+				delete obj.startDate;
+		}
+		if (obj.endDate) {
+			obj.endDate = new Date(obj.endDate);
+			if (isNaN(obj.endDate))
+				delete obj.endDate;
+		}
+		return obj;
+	}
   
 	/*********************************
 	 * METHODS
 	 *********************************/
 
 	Season.prototype.getPublic = function() {
-		const keys = ['id', 'title', 'startDate', 'endDate'];
+		const keys = ['id', 'name', 'startDate', 'endDate'];
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
 	}
 

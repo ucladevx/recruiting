@@ -6,7 +6,7 @@ module.exports = (Sequelize, db) => {
    * SCHEMA
    *********************************/
 
-	const Application = db.define('season', {
+	const Application = db.define('application', {
 		id: {
 			type: Sequelize.STRING,
 			primaryKey: true,
@@ -21,6 +21,12 @@ module.exports = (Sequelize, db) => {
 
 		// season that the application was created in
 		season: {
+			type: Sequelize.STRING,
+			allowNull: false,
+		},
+	
+		// season name for dispay purposes
+		seasonName: {
 			type: Sequelize.STRING,
 			allowNull: false,
 		},
@@ -62,10 +68,11 @@ module.exports = (Sequelize, db) => {
 				fields: ['id']
 			},
 
-			// a hash index on the user makes lookup by user O(1)
+			// a btree index on user makes getting user apps O(logn)
 			{
-				unique: true,
-				fields: ['user']
+					name: 'application_user_btree_index',
+					method: 'BTREE',
+					fields: ['user', { attribute: 'user', order: 'ASC' }]
 			},
 		]
   });
@@ -83,23 +90,49 @@ module.exports = (Sequelize, db) => {
 	};
 
 	Application.userCreatedForSeason = function(user, season) {
-		return this.findAll({ where: { user, season } });
+		return this.findOne({ where: { user, season } });
 	}
 
 	Application.findBySeason = function(season) {
 		return this.findAll({ where: { season } });
+	};
+
+	Application.latestForUser = function(user) {
+		return this.findOne({
+			where: { user },
+			order: [['createdAt', 'DESC']],
+		});
+	}
+
+	Application.destroyById = function(id) {
+		return this.destroy({ where: { id }});
+	}
+
+	Application.sanitizeProfile = function(profile) {
+		return profile; // for now don't sanitize
+	};
+
+	Application.sanitizeAdminReview = function(review) {
+		return _.pick(review, ['notes', 'rating', 'status']);
 	};
   
 	/*********************************
 	 * METHODS
 	 *********************************/
 
-	Application.prototype.getPublic = function(admin) {
-		const keys = ['id', 'user', 'season', 'status', 'profile'];
+	Application.prototype.getMetaData = function(admin) {
+		const keys = ['id', 'user', 'season', 'seasonName', 'status'];
 		if (admin)
 			keys.push('notes', 'rating');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
-	}
+	};
 
-	return User;
+	Application.prototype.getPublic = function(admin) {
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'profile'];
+		if (admin)
+			keys.push('notes', 'rating');
+		return _.object(keys, keys.map(key => this.getDataValue(key)));
+	};
+
+	return Application;
 };

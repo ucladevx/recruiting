@@ -46,7 +46,7 @@ nginx-logs:
 	sudo docker exec -it $$(sudo docker ps | grep "devx/recruiting-ui" | cut -d' ' -f1) tail -f /var/log/nginx/access.log
 
 psql:
-	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) psql -U user
+	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) psql -U postgres
 
 pg_bkup:
 	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) /bin/ash -c 'pg_dump -U postgres > "/backup/pg_bkup_$(shell date --iso-8601=minutes)"'
