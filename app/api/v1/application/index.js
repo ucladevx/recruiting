@@ -17,6 +17,10 @@ router.route('/create')
 .all(auth.requireUser('Admins cannot create applications'))
 .post(routes.UserRoutes.createApplication);
 
+router.route('/:id/submit')
+.all(auth.requireUser('Admins cannot submit applications'))
+.post(routes.UserRoutes.submitApplication);
+
 router.route('/:id/review')
 .all(auth.requireAdmin())
 .post(routes.AdminRoutes.reviewApplication);

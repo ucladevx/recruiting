@@ -33,7 +33,7 @@ module.exports = (Sequelize, db) => {
 
 		// application status
 		status: {
-			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED', 'ACCEPTED'),
+			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED','ACCEPTED'),
 			defaultValue: 'IN_PROGRESS'
 		},
 
@@ -133,6 +133,10 @@ module.exports = (Sequelize, db) => {
 			keys.push('notes', 'rating');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
 	};
+
+	Application.prototype.inProgress = function() {
+		return this.getDataValue('status') === 'IN_PROGRESS';
+	}
 
 	return Application;
 };

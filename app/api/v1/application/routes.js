@@ -23,8 +23,8 @@ class AdminRoutes {
 		getApplications
 			.then(applications => 
 				res.json({
-					applications: applications.map(appliation => 
-						appliation.getMetaData(true)
+					applications: applications.map(application => 
+						req.query.extended ? application.getPublic(true) : application.getMetaData(true)
 					)
 				})
 			)
@@ -126,7 +126,7 @@ class UserRoutes {
 			.then(applications =>
 				res.json({
 					applications: applications.map(appliation => 
-						appliation.getMetaData()
+						req.query.extended ? application.getPublic() : appliation.getMetaData()
 					)
 				})
 			)
@@ -180,6 +180,8 @@ class UserRoutes {
 					throw new error.NotFound('Application not found');
 				if (application.user !== req.user.id)
 					throw new error.Forbidden('You cannot update this application');
+				if (!application.inProgress())
+					throw new error.Forbidden('You cannot update a submitted application');
 				return application.update({
 					profile: Application.sanitizeProfile(req.body.profile),
 					lastUpdated: new Date(),
@@ -237,6 +239,21 @@ class UserRoutes {
 				});
 			})
 			.then(application => res.json({ application: application.getPublic(false) }))
+			.catch(next);
+	}
+
+	static submitApplication(req, res, next) {
+		Application.findById(req.params.id)
+			.then(application => {
+				if (!application)
+					throw new errors.NotFound('Application not found');
+				if (!application.inProgress())
+					throw new errors.BadRequest('You can only submit in-progress applications.');
+				return application.update({
+					status: 'SUBMITTED',
+				});
+			})
+			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
 }
