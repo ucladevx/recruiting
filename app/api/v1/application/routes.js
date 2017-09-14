@@ -93,14 +93,15 @@ class AdminRoutes {
 	 * @param {*} next 
 	 */
 	static reviewApplication(req, res, next) {
-		if (!req.params.application)
+		if (!req.body.application)
 			return next(new error.BadRequest('Application data must be specified'));
 		Application.findById(req.params.id)
 			.then(application => {
 				if (!application)
 					throw new error.NotFound('Application not found');
-				return application.update(Application.sanitizeAdminReview(req.params.application));
+				return application.update(Application.sanitizeAdminReview(req.body.application));
 			})
+			.then(() => res.json({}))
 			.catch(next);
 	}
 }

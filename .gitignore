@@ -2,3 +2,4 @@ node.env
 node.dev.env
 node_modules
 app/config/SESSION_SECRET
+.DS_Store
