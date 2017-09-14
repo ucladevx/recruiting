@@ -72,6 +72,8 @@ class AuthRoutes {
       return next(new error.BadRequest('Password must be provided'));
     if (req.body.user.password.length < 10)
       return next(new error.BadRequest('Password should be at least 10 characters long'));
+    if (req.body.user.password !== req.body.user.confPassword)
+      return next(new error.BadRequest('Passwords do not match'));
 
     const email = req.body.user.email;
     const password = req.body.user.password;
