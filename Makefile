@@ -18,10 +18,14 @@ gen-certs:
 	sudo docker run -it --rm -v $(pwd)/certs:/etc/letsencrypt -v $(pwd)/certs-data:/data/letsencrypt deliverous/certbot certonly --webroot --webroot-path=/data/letsencrypt -d members.uclaacm.com
 
 env:
-	gpg node.env.gpg
+	gpg node.env.tar.gz.gpg
+	tar -xvzf node.env.tar.gz
+	rm -rf node.env.tar.gz
 
 gen-env:
-	gpg -c node.env
+	tar -cvzf node.env.tar.gz node.env node.dev.env
+	gpg -c node.env.tar.gz
+	rm -rf node.env.tar.gz
 
 update:
 	git pull origin master
