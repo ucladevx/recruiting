@@ -15,6 +15,7 @@ module.exports = {
     user: process.env.PG_USER,
     pass: process.env.PG_PASS,
     db: process.env.PG_DB,
+    devSetup: true,
   },
 
   session: {

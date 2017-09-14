@@ -1,6 +1,7 @@
 const error = require('../error');
 const config = require('../config');
 const logger = require('../logger');
+const devsetup = require('./devsetup');
 const Sequelize = require('sequelize');
 
 const db = new Sequelize(config.database.db, config.database.user, config.database.pass, {
@@ -19,8 +20,11 @@ const Application = require('./schema/application')(Sequelize, db);
 /**
  * DB setup function to sync tables and add admin if doesn't exist
  */
-const setup = (force, dev) => {
-  return db.sync({ force });
+const setup = (force) => {
+  const p = db.sync({ force });
+  if (config.database.devSetup && config.isDevelopment)
+    return p.then(() => devsetup(User, Season, Application));
+  return p;
 };
 
 /**
