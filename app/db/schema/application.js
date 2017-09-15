@@ -149,7 +149,7 @@ module.exports = (Sequelize, db) => {
 		return this.getDataValue('status') === 'REJECTED';
 	};
 
-	Application.prototype.rejected = function() {
+	Application.prototype.accepted = function() {
 		return this.getDataValue('status') === 'ACCEPTED';
 	};
 
