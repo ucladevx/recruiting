@@ -252,6 +252,7 @@ class UserRoutes {
 					throw new errors.BadRequest('You can only submit in-progress applications.');
 				return application.update({
 					status: 'SUBMITTED',
+					dateSubmitted: new Date(),
 				});
 			})
 			.then(application => res.json({ application: application.getPublic() }))

@@ -59,6 +59,11 @@ module.exports = (Sequelize, db) => {
 			type: Sequelize.DATE,
 			defaultValue: Sequelize.NOW,
 		},
+
+		// date that the application was submitted
+		dateSubmitted: {
+			type: Sequelize.DATE,
+		},
 	}, {
 		// creating indices on frequently accessed fields improves efficiency
 		indexes: [
@@ -123,20 +128,30 @@ module.exports = (Sequelize, db) => {
 	Application.prototype.getMetaData = function(admin) {
 		const keys = ['id', 'user', 'season', 'seasonName', 'status'];
 		if (admin)
-			keys.push('notes', 'rating');
+			keys.push('notes', 'rating', 'dateSubmitted');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
 	};
 
 	Application.prototype.getPublic = function(admin) {
 		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'profile'];
 		if (admin)
-			keys.push('notes', 'rating');
+			keys.push('notes', 'rating', 'dateSubmitted');
+		if (!admin && (this.rejected() || this.accepted()))
+			keys.push('notes');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
 	};
 
 	Application.prototype.inProgress = function() {
 		return this.getDataValue('status') === 'IN_PROGRESS';
-	}
+	};
+
+	Application.prototype.rejected = function() {
+		return this.getDataValue('status') === 'REJECTED';
+	};
+
+	Application.prototype.rejected = function() {
+		return this.getDataValue('status') === 'ACCEPTED';
+	};
 
 	return Application;
 };
