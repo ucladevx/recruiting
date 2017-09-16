@@ -54,6 +54,8 @@ Vagrant.configure("2") do |config|
 
 	config.vm.network "forwarded_port", guest: 8080, host: 8080
 	config.vm.network "forwarded_port", guest: 8000, host: 8000
+	config.vm.network "forwarded_port", guest: 7800, host: 7801
+	config.vm.network "forwarded_port", guest: 80,   host: 3000
 	#
 	# View the documentation for the provider you are using for more
 	# information on available options.
@@ -71,7 +73,7 @@ Vagrant.configure("2") do |config|
 	config.vm.provision "shell", inline: <<-SHELL
 		apt-get update
 		apt-get install -y build-essential git vim apt-transport-https ca-certificates curl software-properties-common
-	
+
 		curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o docker.gpg && apt-key add docker.gpg && rm docker.gpg
 		add-apt-repository "deb https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 		apt-get update
