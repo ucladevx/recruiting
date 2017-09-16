@@ -252,9 +252,9 @@ class UserRoutes {
 		Application.findById(req.params.id)
 			.then(application => {
 				if (!application)
-					throw new errors.NotFound('Application not found');
+					throw new error.NotFound('Application not found');
 				if (!application.inProgress())
-					throw new errors.BadRequest('You can only submit in-progress applications.');
+					throw new error.BadRequest('You can only submit in-progress applications.');
 				return application.update({
 					status: 'SUBMITTED',
 					dateSubmitted: new Date(),
