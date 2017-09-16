@@ -129,7 +129,16 @@ module.exports = (Sequelize, db) => {
 		const keys = ['id', 'user', 'season', 'seasonName', 'status'];
 		if (admin)
 			keys.push('notes', 'rating', 'dateSubmitted');
-		return _.object(keys, keys.map(key => this.getDataValue(key)));
+		
+		const obj = _.object(keys, keys.map(key => this.getDataValue(key)));
+
+		if (admin && this.getDataValue('profile')) {
+			const profileKeys = ['firstName', 'lastName', 'gender', 'year', 'rolePreference'];
+			const profile = this.getDataValue('profile');
+			obj.profile = _.object(profileKeys, profileKeys.map(key => profile[key]));
+		}
+
+		return obj;
 	};
 
 	Application.prototype.getPublic = function(admin) {

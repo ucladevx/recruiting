@@ -21,7 +21,11 @@ const Application = require('./schema/application')(Sequelize, db);
  * DB setup function to sync tables and add admin if doesn't exist
  */
 const setup = (force) => {
-  const p = db.sync({ force });
+  const p = db.sync({ force }).catch(err => {
+    logger.error(err);
+    process.exit(1);
+  });
+
   if (config.database.devSetup && config.isDevelopment)
     return p.then(() => devsetup(User, Season, Application));
   return p;
