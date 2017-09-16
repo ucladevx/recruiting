@@ -106,7 +106,7 @@ class AdminRoutes {
 					throw new error.NotFound('Application not found');
 				return application.update(Application.sanitizeAdminReview(req.body.application));
 			})
-			.then(() => res.json({}))
+			.then(application => res.json({ application: application.getPublic(true) }))
 			.catch(next);
 	}
 }
