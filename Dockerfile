@@ -12,7 +12,9 @@ RUN mkdir -p /var/www/recruiting
 COPY *.json /var/www/recruiting/
 
 # install the deps
-RUN cd /var/www/recruiting && npm install --production && npm rebuild bcrypt --build-from-source
+RUN cd /var/www/recruiting && \
+    npm install --production && \
+    npm rebuild bcrypt --build-from-source
 
 # set the working direction and copy the source
 WORKDIR /var/www/recruiting
