@@ -1,11 +1,14 @@
+const bodyParser = require('body-parser');
 const cluster = require('cluster');
 const express = require('express');
 const morgan = require('morgan');
 const uuid = require('uuid');
-const bodyParser = require('body-parser');
 const app = require('./app');
 const log = app.logger;
 let server = express();
+
+// api server doesn't need ETAG -- responses cannot be cached
+// server.set('etag', false);
 
 // enable CORS in development
 if (app.config.isDevelopment) {
@@ -30,8 +33,7 @@ server.use((req, res, next) => {
 // Enable logging for debugging and tracing purposes
 server.use(morgan(':date[web] [IP :req[X-Forwarded-For]] [Flow :res[X-Flow-Id]] :method :url :status :response-time[3]ms'));
 
-// Parse urlencoded and json POST data
-server.use(bodyParser.urlencoded({ extended: true }));
+// Parse only json POST data
 server.use(bodyParser.json());
 
 // Route the API
@@ -50,7 +52,7 @@ if (cluster.isMaster) {
 	log.debug("Creating %d cluster workers...", app.config.numCPUs);
 	for (let i = 0; i < app.config.numCPUs; i++)
 		cluster.fork();
-	
+
 	cluster.on('exit', (worker, code, signal) => {
 		log.info("Worker PID %s died (%s). Restarting...", worker.process.pid, signal);
 		cluster.fork();
