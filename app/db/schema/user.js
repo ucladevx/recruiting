@@ -1,6 +1,6 @@
 const _ = require('underscore');
 const uuid = require('uuid');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcrypt');
 
 const HASH_ROUNDS = 8;
 
@@ -66,7 +66,7 @@ module.exports = (Sequelize, db) => {
 			type: Sequelize.DATE,
 			defaultValue: Sequelize.NOW
 		},
-	
+
 		// date of last login
 		lastLogin: {
 			type: Sequelize.DATE,
@@ -88,7 +88,7 @@ module.exports = (Sequelize, db) => {
 			},
 		]
   });
-  
+
 	/*********************************
 	 * STATICS
 	 *********************************/
@@ -104,7 +104,7 @@ module.exports = (Sequelize, db) => {
 	User.generateHash = function(password) {
 		return bcrypt.hash(password, HASH_ROUNDS);
 	};
-  
+
 	/*********************************
 	 * METHODS
 	 *********************************/

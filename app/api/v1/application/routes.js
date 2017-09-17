@@ -50,11 +50,7 @@ class AdminRoutes {
 					throw new error.NotFound('Application not found');
 				return application;
 			})
-			.then(application =>
-				res.json({
-					application: application.getPublic(true)
-				})
-			)
+			.then(application => res.json({ application: application.getPublic(true) }))
 			.catch(next);
 	}
 
@@ -160,11 +156,7 @@ class UserRoutes {
 					throw new error.Forbidden('You cannot view this application');
 				return application;
 			})
-			.then(application =>
-				res.json({
-					application: application.getPublic(true)
-				})
-			)
+			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
 
@@ -193,7 +185,7 @@ class UserRoutes {
 					lastUpdated: new Date(),
 				});
 			})
-			.then(application => res.json({ application: application.getPublic(req.user.isAdmin()) }))
+			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
 
@@ -244,7 +236,7 @@ class UserRoutes {
 					profile: application ? application.profile : {},
 				});
 			})
-			.then(application => res.json({ application: application.getPublic(false) }))
+			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
 

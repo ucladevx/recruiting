@@ -49,6 +49,9 @@ logs:
 nginx-logs:
 	sudo docker exec -it $$(sudo docker ps | grep "devx/recruiting-ui" | cut -d' ' -f1) tail -f /var/log/nginx/access.log
 
+sh:
+	sudo docker exec -it $$(sudo docker ps | grep "devx/recruiting " | cut -d' ' -f1) /bin/ash
+
 psql:
 	sudo docker exec -it $$(sudo docker ps | grep "postgres" | cut -d' ' -f1) psql -U postgres
 

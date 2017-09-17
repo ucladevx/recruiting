@@ -24,7 +24,7 @@ module.exports = (Sequelize, db) => {
 			type: Sequelize.STRING,
 			allowNull: false,
 		},
-	
+
 		// season name for dispay purposes
 		seasonName: {
 			type: Sequelize.STRING,
@@ -81,7 +81,7 @@ module.exports = (Sequelize, db) => {
 			},
 		]
   });
-  
+
 	/*********************************
 	 * STATICS
 	 *********************************/
@@ -120,7 +120,7 @@ module.exports = (Sequelize, db) => {
 	Application.sanitizeAdminReview = function(review) {
 		return _.pick(review, ['notes', 'rating', 'status']);
 	};
-  
+
 	/*********************************
 	 * METHODS
 	 *********************************/
@@ -129,7 +129,7 @@ module.exports = (Sequelize, db) => {
 		const keys = ['id', 'user', 'season', 'seasonName', 'status'];
 		if (admin)
 			keys.push('notes', 'rating', 'dateSubmitted');
-		
+
 		const obj = _.object(keys, keys.map(key => this.getDataValue(key)));
 
 		if (admin && this.getDataValue('profile')) {
@@ -142,9 +142,9 @@ module.exports = (Sequelize, db) => {
 	};
 
 	Application.prototype.getPublic = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'profile'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'profile', 'dateSubmitted'];
 		if (admin)
-			keys.push('notes', 'rating', 'dateSubmitted');
+			keys.push('notes', 'rating');
 		if (!admin && (this.rejected() || this.accepted()))
 			keys.push('notes');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
