@@ -2,5 +2,6 @@ node.env
 node.dev.env
 node_modules
 app/config/SESSION_SECRET
+certs
 .DS_Store
 *.pyc

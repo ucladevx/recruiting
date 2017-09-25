@@ -13,9 +13,16 @@ certs:
 	rm -rf certs.tar.gz
 
 gen-certs:
-	rm -rf certs-data
-	mkdir -p certs-data
-	sudo docker run -it --rm -v $(pwd)/certs:/etc/letsencrypt -v $(pwd)/certs-data:/data/letsencrypt deliverous/certbot certonly --webroot --webroot-path=/data/letsencrypt -d members.uclaacm.com
+	sudo docker run \
+		-v $(shell pwd)/certs:/etc/letsencrypt \
+		-e domains="recruiting.ucladevx.com" \
+		-e email="ucladevx@gmail.com" \
+		-p 80:80 \
+		-p 443:443 \
+		--rm pierreprinetti/certbot:latest
+	sudo tar -cvzf certs.tar.gz certs
+	gpg -c certs.tar.gz
+	rm -rf certs.tar.gz
 
 env:
 	gpg node.env.tar.gz.gpg
