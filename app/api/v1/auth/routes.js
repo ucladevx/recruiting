@@ -74,7 +74,7 @@ class AuthRoutes {
     if (req.body.user.password !== req.body.user.confPassword)
       return next(new error.BadRequest('Passwords do not match'));
 
-    const email = req.body.user.email;
+    const email = req.body.user.email.toLowerCase();
     const password = req.body.user.password;
 
     User.generateHash(password).then(hash => {
