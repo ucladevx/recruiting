@@ -143,6 +143,10 @@ module.exports = (Sequelize, db) => {
 		return profile; // for now don't sanitize
 	};
 
+	Application.sanitizeAvailability = function(availability) {
+		return availability; // for now don't sanitize: later need to guarantee no bad times/dates given
+	};
+
 	// sanitize relevant fields for app review
 	Application.sanitizeAdminAppReview = function(review) {
 		return _.pick(review, ['notes', 'rating', 'status']);

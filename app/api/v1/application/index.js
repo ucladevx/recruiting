@@ -21,6 +21,14 @@ router.route('/:id/submit')
 .all(auth.requireUser('Admins cannot submit applications'))
 .post(routes.UserRoutes.submitApplication);
 
+router.route('/:id/interview')
+.all((req, res, next) => {
+  req.routes = req.user.isAdmin() ? routes.AdminRoutes : routes.UserRoutes;
+  next();
+})
+.get((req, res, next) => req.routes.getAvailability(req, res, next))
+.put((req, res, next) => req.routes.updateAvailability(req, res, next));
+
 router.route('/:id/review')
 .all(auth.requireAdmin())
 .post(routes.AdminRoutes.reviewApplication);

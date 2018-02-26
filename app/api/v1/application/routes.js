@@ -85,6 +85,42 @@ class AdminRoutes {
 	}
 
 	/**
+	 * Execute a PUT request.
+	 * 
+	 * PUT update scheduled time of interview
+	 * 
+	 * @param {*} req
+	 * @param {*} res
+	 * @param {*} next
+	 */
+	static updateAvailability(req, res, next) {
+		if (!req.params.id)
+			return next(new error.BadRequest('Application ID must be specified'));
+		if (!req.body.profile)
+			return next(new error.BadRequest('Profile must be specified'));
+
+		Application.findById(req.params.id)
+			.then(application => {
+				if (!application)
+					throw new error.NotFound('Application not found');
+				if (application.user !== req.user.id)
+					throw new error.Forbidden('You cannot update this application');
+				if (!application.interviewing())
+					throw new error.Forbidden('Candidate cannot be scheduled for interview');
+
+				if (interviewTime === undefined) {
+					return next(new error.BadRequest('interviewTime field required'));
+				}
+				return application.update({
+					interviewTime: req.body.interviewTime,	// no sanitization required
+					lastUpdated: new Date(),
+				});
+			})
+			.then(application => res.json({ application: application.getPublic() }))
+			.catch(next);
+	}
+
+	/**
 	 * Review an application by ID.
 	 *
 	 * An admin can add notes and a rating and change its status 
@@ -105,7 +141,7 @@ class AdminRoutes {
 					throw new error.NotFound('Application not found');
 
 				/* FSM State change code */
-				if (application.interviewing() && (req.body.application.status === 'ACCEPTED' || 
+				if (application.interviewing() && application.interviewed() && (req.body.application.status === 'ACCEPTED' || 
 				req.body.application.status === 'REJECTED')) {
 					// INTERVIEWING -> (REJECTED, ACCEPTED)
 					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
@@ -236,9 +272,13 @@ class UserRoutes {
 				if (application.user !== req.user.id)
 					throw new error.Forbidden('You cannot update this application');
 				if (!application.interviewing())
-					throw new error.Forbidden('You cannot update a submitted application');
+					throw new error.Forbidden('You have not yet moved to the interview stage');
+
+				if (availability === undefined) {
+					return next(new error.BadRequest('availability field required'));
+				}
 				return application.update({
-					profile: Application.sanitizeProfile(req.body.profile),
+					availability: Application.sanitizeAvailability(req.body.availability),
 					lastUpdated: new Date(),
 				});
 			})
