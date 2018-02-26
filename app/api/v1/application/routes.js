@@ -87,7 +87,10 @@ class AdminRoutes {
 	/**
 	 * Review an application by ID.
 	 *
-	 * An admin can add notes and a rating and change its status (REJECTED, ACCEPTED)
+	 * An admin can add notes and a rating and change its status 
+	 * SUBMITTED 	-> (REJECTED, INTERVIEWING)
+	 * INTERVIEWING -> (REJECTED, ACCEPTED)
+	 * REJECTED		-> (INTERVIEWING, ACCEPTED [after interview > -1])  * if accidentally rejected someone
 	 *
 	 * @param {*} req
 	 * @param {*} res
@@ -100,7 +103,29 @@ class AdminRoutes {
 			.then(application => {
 				if (!application)
 					throw new error.NotFound('Application not found');
-				return application.update(Application.sanitizeAdminReview(req.body.application));
+
+				/* FSM State change code */
+				if (application.interviewing() && (req.body.application.status === 'ACCEPTED' || 
+				req.body.application.status === 'REJECTED')) {
+					// INTERVIEWING -> (REJECTED, ACCEPTED)
+					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
+				}
+				else if (application.submitted() && (req.body.application.status === 'INTERVIEWING' || 
+				req.body.application.status === 'REJECTED')) {
+					// SUBMITTED -> (REJECTED, INTERVIEWING)
+					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+				}
+				else if (application.rejected() && req.body.application.status === 'INTERVIEWING') {
+					// REJECTED -> INTERVIEWING
+					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+				}
+				else if (application.rejected() && req.body.application.status === 'ACCEPTED' && application.interviewed()) {
+					// REJECTED -> ACCEPTED
+					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
+				}
+
+				/* Invalid datapath */
+				return next(new error.BadRequest('Application data invalid: status change unsupported'));
 			})
 			.then(application => res.json({ application: application.getPublic(true) }))
 			.catch(next);
@@ -179,6 +204,38 @@ class UserRoutes {
 				if (application.user !== req.user.id)
 					throw new error.Forbidden('You cannot update this application');
 				if (!application.inProgress())
+					throw new error.Forbidden('You cannot update a submitted application');
+				return application.update({
+					profile: Application.sanitizeProfile(req.body.profile),
+					lastUpdated: new Date(),
+				});
+			})
+			.then(application => res.json({ application: application.getPublic() }))
+			.catch(next);
+	}
+
+	/**
+	 * Execute a PUT request.
+	 * 
+	 * PUT update availability for interview
+	 * 
+	 * @param {*} req
+	 * @param {*} res
+	 * @param {*} next
+	 */
+	static updateAvailability(req, res, next) {
+		if (!req.params.id)
+			return next(new error.BadRequest('Application ID must be specified'));
+		if (!req.body.profile)
+			return next(new error.BadRequest('Profile must be speficied'));
+
+		Application.findById(req.params.id)
+			.then(application => {
+				if (!application)
+					throw new error.NotFound('Application not found');
+				if (application.user !== req.user.id)
+					throw new error.Forbidden('You cannot update this application');
+				if (!application.interviewing())
 					throw new error.Forbidden('You cannot update a submitted application');
 				return application.update({
 					profile: Application.sanitizeProfile(req.body.profile),

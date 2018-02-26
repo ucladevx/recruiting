@@ -33,9 +33,11 @@ module.exports = (Sequelize, db) => {
 
 		// application status
 		status: {
-			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED','ACCEPTED'),
+			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED','INTERVIEWING','ACCEPTED'),
 			defaultValue: 'IN_PROGRESS'
 		},
+
+		/* Regarding initial review */
 
 		// any notes given on this application
 		notes: {
@@ -43,9 +45,33 @@ module.exports = (Sequelize, db) => {
 		},
 
 		// a rating for this application
+		// Frontend should deal with guaranteeing rating values to be in range [0, 10]
 		rating: {
 			type: Sequelize.INTEGER,
-			defaultValue: 0,
+			defaultValue: -1,
+		},
+
+		/* Regarding interview review */
+
+		// available times and dates for interview
+		availability: {
+			type: Sequelize.ARRAY(Sequelize.TEXT),
+		},
+
+		// date and time for interview
+		interviewTime: {
+			type: Sequelize.STRING,
+		},
+
+		// notes pertaining to interview
+		interviewNotes: {
+			type: Sequelize.STRING,
+		},
+
+		// rating pertaining to interview
+		interviewRating: {
+			type: Sequelize.INTEGER,
+			defaultValue: -1,
 		},
 
 		// user inputed profile associated with this application
@@ -117,8 +143,14 @@ module.exports = (Sequelize, db) => {
 		return profile; // for now don't sanitize
 	};
 
-	Application.sanitizeAdminReview = function(review) {
+	// sanitize relevant fields for app review
+	Application.sanitizeAdminAppReview = function(review) {
 		return _.pick(review, ['notes', 'rating', 'status']);
+	};
+
+	// sanitize relevant fields for interview
+	Application.sanitizeAdminInterviewReview = function(review) {
+		return _.pick(review, ['interviewNotes', 'interviewRating', 'status']);
 	};
 
 	/*********************************
@@ -154,13 +186,25 @@ module.exports = (Sequelize, db) => {
 		return this.getDataValue('status') === 'IN_PROGRESS';
 	};
 
+	Application.prototype.submitted = function() {
+		return this.getDataValue('status') === 'SUBMITTED';
+	};
+
 	Application.prototype.rejected = function() {
 		return this.getDataValue('status') === 'REJECTED';
+	};
+
+	Application.prototype.interviewing = function() {
+		return this.getDataValue('status') === 'INTERVIEWING';
 	};
 
 	Application.prototype.accepted = function() {
 		return this.getDataValue('status') === 'ACCEPTED';
 	};
+
+	Application.prototype.interviewed = function() {
+		return this.getDataValue('interviewRating') > -1;
+	}
 
 	return Application;
 };
