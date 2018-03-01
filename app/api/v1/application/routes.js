@@ -111,6 +111,19 @@ class AdminRoutes {
 				if (interviewTime === undefined) {
 					return next(new error.BadRequest('interviewTime field required'));
 				}
+				
+				// check to see that interviewTime is not already booked
+				let currSeason;
+				Season.findForDate(application.dateSubmitted)
+					.then(season => {
+						if (!season)
+							throw new error.BadRequest('No recruiting seasons open right now');
+						if (season.alreadyScheduled(req.body.interviewTime)) {
+							throw new error.BadRequest('Interview time is already scheduled, please choose a different time');
+						}
+					});
+				
+				// update the interviewTime of applicant
 				return application.update({
 					interviewTime: req.body.interviewTime,	// no sanitization required
 					lastUpdated: new Date(),
@@ -119,6 +132,36 @@ class AdminRoutes {
 			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
+
+	// /**
+	//  * Execute a GET request.
+	//  * 
+	//  * GET update available interview times
+	//  * 
+	//  * @param {*} req
+	//  * @param {*} res
+	//  * @param {*} next
+	//  */
+	// static getAvailability(req, res, next) {
+	// 	if (!req.params.id)
+	// 		return next(new error.BadRequest('Application ID must be specified'));
+
+	// 	Application.findById(req.params.id)
+	// 		.then(application => {
+	// 			if (!application)
+	// 				throw new error.NotFound('Application not found');
+	// 			if (application.user !== req.user.id)
+	// 				throw new error.Forbidden('You cannot get availability for this application');
+	// 			if (!application.interviewing())
+	// 				throw new error.Forbidden('Candidate is not interviewing: no availability available');
+
+	// 			return {
+	// 				availability: application.availability
+	// 			};
+	// 		})
+	// 		.then(application => res.json({ application: application.getPublic() }))
+	// 		.catch(next);
+	// }
 
 	/**
 	 * Review an application by ID.
@@ -285,6 +328,36 @@ class UserRoutes {
 			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
+
+	// /**
+	//  * Execute a GET request.
+	//  * 
+	//  * GET update available interview times
+	//  * 
+	//  * @param {*} req
+	//  * @param {*} res
+	//  * @param {*} next
+	//  */
+	// static getAvailability(req, res, next) {
+	// 	if (!req.params.id)
+	// 		return next(new error.BadRequest('Application ID must be specified'));
+
+	// 	Application.findById(req.params.id)
+	// 		.then(application => {
+	// 			if (!application)
+	// 				throw new error.NotFound('Application not found');
+	// 			if (application.user !== req.user.id)
+	// 				throw new error.Forbidden('You cannot get availability for this application');
+	// 			if (!application.interviewing())
+	// 				throw new error.Forbidden('Candidate is not interviewing: no availability available');
+
+	// 			return {
+	// 				availability: application.availability
+	// 			};
+	// 		})
+	// 		.then(application => res.json({ application: application.getPublic() }))
+	// 		.catch(next);
+	// }
 
 	/**
 	 * Execute a DELETE request.

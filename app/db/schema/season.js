@@ -45,6 +45,13 @@ module.exports = (Sequelize, db) => {
 				}
 			}
 		},
+
+		// dates with interview scheduled
+		scheduledInterviews: {
+			type: Sequelize.ARRAY(Sequelize.DATE),
+			allowNull: true,
+		}
+
 	}, {
 		// creating indices on frequently accessed fields improves efficiency
 		indexes: [
@@ -136,6 +143,10 @@ module.exports = (Sequelize, db) => {
 	Season.prototype.getPublic = function() {
 		const keys = ['id', 'name', 'startDate', 'endDate'];
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
+	}
+
+	Season.prototype.alreadyScheduled = function(date) {
+		return !this.getDataValue(scheduledInterviews.includes(date));
 	}
 
 	return Season;

@@ -55,7 +55,7 @@ module.exports = (Sequelize, db) => {
 
 		// available times and dates for interview
 		availability: {
-			type: Sequelize.ARRAY(Sequelize.TEXT),
+			type: Sequelize.ARRAY(Sequelize.DATE),
 		},
 
 		// date and time for interview
