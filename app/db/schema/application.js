@@ -60,7 +60,7 @@ module.exports = (Sequelize, db) => {
 
 		// date and time for interview
 		interviewTime: {
-			type: Sequelize.STRING,
+			type: Sequelize.DATE,
 		},
 
 		// notes pertaining to interview
