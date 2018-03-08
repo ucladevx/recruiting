@@ -84,54 +84,54 @@ class AdminRoutes {
 			.catch(next);
 	}
 
-	/**
-	 * Execute a PUT request.
-	 * 
-	 * PUT update scheduled time of interview
-	 * 
-	 * @param {*} req
-	 * @param {*} res
-	 * @param {*} next
-	 */
-	static updateAvailability(req, res, next) {
-		if (!req.params.id)
-			return next(new error.BadRequest('Application ID must be specified'));
-		if (!req.body.profile)
-			return next(new error.BadRequest('Profile must be specified'));
+	// /**
+	//  * Execute a PUT request.
+	//  * 
+	//  * PUT update scheduled time of interview
+	//  * 
+	//  * @param {*} req
+	//  * @param {*} res
+	//  * @param {*} next
+	//  */
+	// static updateAvailability(req, res, next) {
+	// 	if (!req.params.id)
+	// 		return next(new error.BadRequest('Application ID must be specified'));
+	// 	if (!req.body.profile)
+	// 		return next(new error.BadRequest('Profile must be specified'));
 
-		Application.findById(req.params.id)
-			.then(application => {
-				if (!application)
-					throw new error.NotFound('Application not found');
-				if (application.user !== req.user.id)
-					throw new error.Forbidden('You cannot update this application');
-				if (!application.interviewing())
-					throw new error.Forbidden('Candidate cannot be scheduled for interview');
+	// 	Application.findById(req.params.id)
+	// 		.then(application => {
+	// 			if (!application)
+	// 				throw new error.NotFound('Application not found');
+	// 			if (application.user !== req.user.id)
+	// 				throw new error.Forbidden('You cannot update this application');
+	// 			if (!application.interviewing())
+	// 				throw new error.Forbidden('Candidate cannot be scheduled for interview');
 
-				if (interviewTime === undefined) {
-					return next(new error.BadRequest('interviewTime field required'));
-				}
+	// 			if (interviewTime === undefined) {
+	// 				return next(new error.BadRequest('interviewTime field required'));
+	// 			}
 				
-				// check to see that interviewTime is not already booked
-				let currSeason;
-				Season.findForDate(application.dateSubmitted)
-					.then(season => {
-						if (!season)
-							throw new error.BadRequest('No recruiting seasons open right now');
-						if (season.alreadyScheduled(req.body.interviewTime)) {
-							throw new error.BadRequest('Interview time is already scheduled, please choose a different time');
-						}
-					});
+	// 			// check to see that interviewTime is not already booked
+	// 			let currSeason;
+	// 			Season.findForDate(application.dateSubmitted)
+	// 				.then(season => {
+	// 					if (!season)
+	// 						throw new error.BadRequest('No recruiting seasons open right now');
+	// 					if (season.alreadyScheduled(req.body.interviewTime)) {
+	// 						throw new error.BadRequest('Interview time is already scheduled, please choose a different time');
+	// 					}
+	// 				});
 				
-				// update the interviewTime of applicant
-				return application.update({
-					interviewTime: req.body.interviewTime,	// no sanitization required
-					lastUpdated: new Date(),
-				});
-			})
-			.then(application => res.json({ application: application.getPublic() }))
-			.catch(next);
-	}
+	// 			// update the interviewTime of applicant
+	// 			return application.update({
+	// 				interviewTime: req.body.interviewTime,	// no sanitization required
+	// 				lastUpdated: new Date(),
+	// 			});
+	// 		})
+	// 		.then(application => res.json({ application: application.getPublic() }))
+	// 		.catch(next);
+	// }
 
 	// /**
 	//  * Execute a GET request.
@@ -167,8 +167,10 @@ class AdminRoutes {
 	 * Review an application by ID.
 	 *
 	 * An admin can add notes and a rating and change its status 
-	 * SUBMITTED 	-> (REJECTED, INTERVIEWING)
-	 * INTERVIEWING -> (REJECTED, ACCEPTED)
+	 * SUBMITTED 	-> (REJECTED, SCHEDULE_INTERVIEW)
+	 * SCHEDULE_INTERVIEW -> (REJECTED, PENDING_INTERVIEW)
+	 * PENDING_INTERVIEW -> (REJECTED, COMPLETED_INTERVIEW)
+	 * COMPLETED_INTERVIEW -> (REJECTED, ACCEPTED)
 	 * REJECTED		-> (INTERVIEWING, ACCEPTED [after interview > -1])  * if accidentally rejected someone
 	 *
 	 * @param {*} req
@@ -184,23 +186,48 @@ class AdminRoutes {
 					throw new error.NotFound('Application not found');
 
 				/* FSM State change code */
-				if (application.interviewing() && application.interviewed() && (req.body.application.status === 'ACCEPTED' || 
+				if (application.submitted() && (req.body.application.status === 'SCHEDULE_INTERVIEW' || 
 				req.body.application.status === 'REJECTED')) {
-					// INTERVIEWING -> (REJECTED, ACCEPTED)
+					// SUBMITTED -> (REJECTED, SCHEDULE_INTERVIEW)
+					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+				}
+				else if (application.scheduling_interview() && (req.body.application.status === 'PENDING_INTERVIEW' || 
+				req.body.application.status === 'REJECTED')) {
+					// SCHEDULE_INTERVIEW -> (REJECTED, PENDING_INTERVIEW)
+					return application.update(Application.sanitizeAdminScheduleInterview(req.body.application));
+				}
+				else if (application.interview_pending() && (req.body.application.status === 'COMPLETED_INTERVIEW' || 
+				req.body.application.status === 'REJECTED')) {
+					// PENDING_INTERVIEW -> (REJECTED, COMPLETED_INTERVIEW)
 					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
 				}
-				else if (application.submitted() && (req.body.application.status === 'INTERVIEWING' || 
+				else if (application.interviewed() && (req.body.application.status === 'ACCEPTED' || 
 				req.body.application.status === 'REJECTED')) {
-					// SUBMITTED -> (REJECTED, INTERVIEWING)
+					// COMPLETED_INTERVIEW -> (REJECTED, ACCEPTED)
+					return application.update({
+						status: req.body.application.status,
+						lastUpdated: new Date(),
+					});
+				}
+
+				else if (application.rejected() && req.body.application.status === 'SCHEDULE_INTERVIEW') {
+					// REJECTED -> SCHEDULE_INTERVIEW
 					return application.update(Application.sanitizeAdminAppReview(req.body.application));
 				}
-				else if (application.rejected() && req.body.application.status === 'INTERVIEWING') {
-					// REJECTED -> INTERVIEWING
-					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+				else if (application.rejected() && req.body.application.status === 'PENDING_INTERVIEW') {
+					// REJECTED -> PENDING_INTERVIEW
+					return application.update(Application.sanitizeAdminScheduleInterview(req.body.application));
+				}
+				else if (application.rejected() && req.body.application.status === 'COMPLETED_INTERVIEW') {
+					// REJECTED -> COMPLETED_INTERVIEW
+					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
 				}
 				else if (application.rejected() && req.body.application.status === 'ACCEPTED' && application.interviewed()) {
 					// REJECTED -> ACCEPTED
-					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
+					return application.update({
+						status: req.body.application.status,
+						lastUpdated: new Date(),
+					});
 				}
 
 				/* Invalid datapath */

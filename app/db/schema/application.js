@@ -33,7 +33,7 @@ module.exports = (Sequelize, db) => {
 
 		// application status
 		status: {
-			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED','INTERVIEWING','ACCEPTED'),
+			type: Sequelize.ENUM('IN_PROGRESS','SUBMITTED','REJECTED','SCHEDULE_INTERVIEW','PENDING_INTERVIEW','COMPLETED_INTERVIEW','ACCEPTED'),
 			defaultValue: 'IN_PROGRESS'
 		},
 
@@ -45,10 +45,10 @@ module.exports = (Sequelize, db) => {
 		},
 
 		// a rating for this application
-		// Frontend should deal with guaranteeing rating values to be in range [0, 10]
+		// Frontend should deal with guaranteeing rating values to be in range [1,5]
 		rating: {
 			type: Sequelize.INTEGER,
-			defaultValue: -1,
+			defaultValue: 0,
 		},
 
 		/* Regarding interview review */
@@ -71,7 +71,7 @@ module.exports = (Sequelize, db) => {
 		// rating pertaining to interview
 		interviewRating: {
 			type: Sequelize.INTEGER,
-			defaultValue: -1,
+			defaultValue: 0,
 		},
 
 		// user inputed profile associated with this application
@@ -157,6 +157,11 @@ module.exports = (Sequelize, db) => {
 		return _.pick(review, ['interviewNotes', 'interviewRating', 'status']);
 	};
 
+	// sanitize relevant fields for interview
+	Application.sanitizeAdminScheduleInterview = function(review) {
+		return _.pick(review, ['interviewTime']);
+	};
+
 	/*********************************
 	 * METHODS
 	 *********************************/
@@ -198,8 +203,12 @@ module.exports = (Sequelize, db) => {
 		return this.getDataValue('status') === 'REJECTED';
 	};
 
-	Application.prototype.interviewing = function() {
-		return this.getDataValue('status') === 'INTERVIEWING';
+	Application.prototype.scheduling_interview = function() {
+		return this.getDataValue('status') === 'SCHEDULE_INTERVIEW';
+	};
+
+	Application.prototype.interview_pending = function() {
+		return this.getDataValue('status') === 'PENDING_INTERVIEW';
 	};
 
 	Application.prototype.accepted = function() {
@@ -207,7 +216,7 @@ module.exports = (Sequelize, db) => {
 	};
 
 	Application.prototype.interviewed = function() {
-		return this.getDataValue('interviewRating') > -1;
+		return this.getDataValue('status') === 'COMPLETED_INTERVIEW';
 	}
 
 	return Application;
