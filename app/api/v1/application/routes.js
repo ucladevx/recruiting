@@ -332,8 +332,8 @@ class UserRoutes {
 	static updateAvailability(req, res, next) {
 		if (!req.params.id)
 			return next(new error.BadRequest('Application ID must be specified'));
-		if (!req.body.profile)
-			return next(new error.BadRequest('Profile must be speficied'));
+		if (!req.body.availability)
+			return next(new error.BadRequest('availability field required'));
 
 		Application.findById(req.params.id)
 			.then(application => {
@@ -341,12 +341,12 @@ class UserRoutes {
 					throw new error.NotFound('Application not found');
 				if (application.user !== req.user.id)
 					throw new error.Forbidden('You cannot update this application');
-				if (!application.interviewing())
-					throw new error.Forbidden('You have not yet moved to the interview stage');
+				if (!application.scheduling_interview())
+					throw new error.Forbidden('You have not yet moved to the interview stage, or you are past this stage');
 
-				if (availability === undefined) {
-					return next(new error.BadRequest('availability field required'));
-				}
+				// if (availability === undefined) {
+				// 	return next(new error.BadRequest('availability field required'));
+				// }
 				return application.update({
 					availability: Application.sanitizeAvailability(req.body.availability),
 					lastUpdated: new Date(),

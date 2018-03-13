@@ -23,7 +23,7 @@ router.route('/:id/submit')
 
 router.route('/:id/schedule')
 .all(auth.requireUser('Admins cannot schedule availability'))
-.put((req, res, next) => req.routes.updateAvailability(req, res, next));
+.put(routes.UserRoutes.updateAvailability);
 
 router.route('/:id/review')
 .all(auth.requireAdmin())

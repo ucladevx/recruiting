@@ -183,7 +183,7 @@ module.exports = (Sequelize, db) => {
 	};
 
 	Application.prototype.getPublic = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'profile', 'dateSubmitted'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'interviewTime', 'availability', 'profile', 'dateSubmitted'];
 		if (admin)
 			keys.push('notes', 'rating');
 		if (!admin && (this.rejected() || this.accepted()))
