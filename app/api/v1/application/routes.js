@@ -332,8 +332,8 @@ class UserRoutes {
 	static updateAvailability(req, res, next) {
 		if (!req.params.id)
 			return next(new error.BadRequest('Application ID must be specified'));
-		if (!req.body.availability)
-			return next(new error.BadRequest('availability field required'));
+		if (!req.body.availability || req.body.availability.length == 0)
+			return next(new error.BadRequest('Availability field required'));
 
 		Application.findById(req.params.id)
 			.then(application => {
