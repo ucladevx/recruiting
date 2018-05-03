@@ -352,6 +352,12 @@ class UserRoutes {
 					lastUpdated: new Date(),
 				});
 			})
+			.then(application => {
+				return application.update({
+						status: 'PENDING_INTERVIEW', //change status to pending interview
+						lastUpdated: new Date(),
+					});
+			})
 			.then(application => res.json({ application: application.getPublic() }))
 			.catch(next);
 	}
