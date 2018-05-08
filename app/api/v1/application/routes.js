@@ -186,7 +186,11 @@ class AdminRoutes {
 					throw new error.NotFound('Application not found');
 
 				/* FSM State change code */
-				if (application.submitted() && (req.body.application.status === 'SCHEDULE_INTERVIEW' || 
+				if (req.body.application.status == null)
+				{
+					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+				}
+				else if (application.submitted() && (req.body.application.status === 'SCHEDULE_INTERVIEW' || 
 				req.body.application.status === 'REJECTED')) {
 					// SUBMITTED -> (REJECTED, SCHEDULE_INTERVIEW)
 					return application.update(Application.sanitizeAdminAppReview(req.body.application));
@@ -196,19 +200,27 @@ class AdminRoutes {
 					// SCHEDULE_INTERVIEW -> (REJECTED, PENDING_INTERVIEW)
 					return application.update(Application.sanitizeAdminScheduleInterview(req.body.application));
 				}
-				else if (application.interview_pending() && (req.body.application.status === 'COMPLETED_INTERVIEW' || 
+				/*else if (application.interview_pending() && (req.body.application.status === 'COMPLETED_INTERVIEW' || 
 				req.body.application.status === 'REJECTED')) {
 					// PENDING_INTERVIEW -> (REJECTED, COMPLETED_INTERVIEW)
 					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
+				}*/
+				else if (application.interview_pending() && (req.body.application.status === 'ACCEPTED' || 
+				req.body.application.status === 'REJECTED')) {
+					// PENDING_INTERVIEW -> (REJECTED, COMPLETED_INTERVIEW)
+					return application.update({
+						status: req.body.application.status,
+						lastUpdated: new Date(),
+					});
 				}
-				else if (application.interviewed() && (req.body.application.status === 'ACCEPTED' || 
+				/*else if (application.interviewed() && (req.body.application.status === 'ACCEPTED' || 
 				req.body.application.status === 'REJECTED')) {
 					// COMPLETED_INTERVIEW -> (REJECTED, ACCEPTED)
 					return application.update({
 						status: req.body.application.status,
 						lastUpdated: new Date(),
 					});
-				}
+				}*/
 
 				else if (application.rejected() && req.body.application.status === 'SCHEDULE_INTERVIEW') {
 					// REJECTED -> SCHEDULE_INTERVIEW
@@ -218,10 +230,10 @@ class AdminRoutes {
 					// REJECTED -> PENDING_INTERVIEW
 					return application.update(Application.sanitizeAdminScheduleInterview(req.body.application));
 				}
-				else if (application.rejected() && req.body.application.status === 'COMPLETED_INTERVIEW') {
+		/*		else if (application.rejected() && req.body.application.status === 'COMPLETED_INTERVIEW') {
 					// REJECTED -> COMPLETED_INTERVIEW
 					return application.update(Application.sanitizeAdminInterviewReview(req.body.application));
-				}
+				} */
 				else if (application.rejected() && req.body.application.status === 'ACCEPTED' && application.interviewed()) {
 					// REJECTED -> ACCEPTED
 					return application.update({
