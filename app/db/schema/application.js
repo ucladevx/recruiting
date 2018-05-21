@@ -76,47 +76,14 @@ module.exports = (Sequelize, db) => {
 			defaultValue: 0,
 		},*/
 
-		//notes by notetaker1
-		notetaker1Name: {
-			type: Sequelize.STRING,
-		},
-
-		notetaker1Notes: {
-			type: Sequelize.STRING,
-		},
-
-		notetaker1Scores: {
-			type: Sequelize.ARRAY(Sequelize.INTEGER),
-		},
-
-		rating1: {
-			type: Sequelize.INTEGER,
-			defaultValue: 0,
-		},
-
-		//notes by notetaker2
-		notetaker2Name: {
-			type: Sequelize.STRING,
-		},
-
-		notetaker2Notes: {
-			type: Sequelize.STRING,
-		},
-
-		notetaker2Scores: {
-			type: Sequelize.ARRAY(Sequelize.INTEGER),
-		},
-
-		rating2: {
-			type: Sequelize.INTEGER,
-			defaultValue: 0,
-		},
-
-
 		// user inputed profile associated with this application
 		profile: {
 			type: Sequelize.JSONB,
 			defaultValue: {},
+		},
+
+		graderReview: {
+			type: Sequelize.ARRAY(Sequelize.JSONB),
 		},
 
 		// end date+time of recruiting season
@@ -182,6 +149,10 @@ module.exports = (Sequelize, db) => {
 		return profile; // for now don't sanitize
 	};
 
+	Application.sanitizeGraderReview = function(graderReview) {
+		return graderReview;
+	}
+
 	Application.sanitizeAvailability = function(availability) {
 		return availability; // for now don't sanitize: later need to guarantee no bad times/dates given
 	};
@@ -189,8 +160,7 @@ module.exports = (Sequelize, db) => {
 	// sanitize relevant fields for app review
 	Application.sanitizeAdminAppReview = function(review) {
 		//return _.pick(review, ['notes', 'rating', 'status']);
-		return _.pick(review, ['notes', 'rating', 'status', 'notetaker1Name', 'notetaker1Notes', 'notetaker1Scores',
-			'rating1', 'notetaker2Name', 'notetaker2Notes', 'notetaker2Scores', 'rating2']);
+		return _.pick(review, ['notes', 'rating', 'status']);
 	};
 
 	// sanitize relevant fields for interview
@@ -209,13 +179,11 @@ module.exports = (Sequelize, db) => {
 	 *********************************/
 
 	Application.prototype.getMetaData = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'notetaker1Name', 'notetaker1Notes', 'notetaker1Scores', 'notetaker2Scores',
-			'rating1', 'notetaker2Name', 'notetaker2Notes', 'rating2'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'graderReview'];
 	/*	if (admin)
 			keys.push('notes', 'rating', 'dateSubmitted'); */
 		if (admin)
-			keys.push('notes', 'rating', 'dateSubmitted', 'notetaker1Name', 'notetaker1Notes', 'notetaker1Scores', 'notetaker2Scores',
-			'rating1', 'notetaker2Name', 'notetaker2Notes', 'rating2');
+			keys.push('notes', 'rating', 'dateSubmitted', 'graderReview');
 
 		const obj = _.object(keys, keys.map(key => this.getDataValue(key)));
 
@@ -225,17 +193,17 @@ module.exports = (Sequelize, db) => {
 			obj.profile = _.object(profileKeys, profileKeys.map(key => profile[key]));
 		}
 
+		//might have to return grader review individual components
+
 		return obj;
 	};
 
 	Application.prototype.getPublic = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'interviewTime', 'availability', 'profile', 'dateSubmitted', 'notetaker1Name', 'notetaker1Notes', 
-			'rating1', 'notetaker1Scores', 'notetaker2Scores', 'notetaker2Name', 'notetaker2Notes', 'rating2'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'interviewTime', 'availability', 'profile', 'dateSubmitted', 'graderReview'];
 		/*if (admin)
 			keys.push('notes', 'rating');*/
 		if (admin)
-			keys.push('notes', 'rating', 'notetaker1Name', 'notetaker1Notes',  'notetaker1Scores', 'notetaker2Scores',
-			'rating1', 'notetaker2Name', 'notetaker2Notes', 'rating2');
+			keys.push('notes', 'rating', 'graderReview');
 		if (!admin && (this.rejected() || this.accepted()))
 			keys.push('notes');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));
