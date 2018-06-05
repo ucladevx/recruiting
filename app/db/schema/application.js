@@ -193,8 +193,6 @@ module.exports = (Sequelize, db) => {
 			obj.profile = _.object(profileKeys, profileKeys.map(key => profile[key]));
 		}
 
-		//might have to return grader review individual components
-
 		return obj;
 	};
 

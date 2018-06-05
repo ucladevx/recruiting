@@ -188,7 +188,31 @@ class AdminRoutes {
 				/* FSM State change code */
 				if (req.body.application.status == null)
 				{
-					return application.update(Application.sanitizeAdminAppReview(req.body.application));
+					//this is when they press save and only when they press save
+					//grab the stuff from req.body.application and package it into a variable, add to the array
+					var temp = {
+						graderName: req.body.application.graderName,
+						notes: req.body.application.notes,
+						technicalExperience: req.body.application.technicalExperience,
+						potentialToCollab: req.body.application.potentialToCollab,
+						execution: req.body.application.execution,
+						teNotes: req.body.application.teNotes,
+						ptcNotes: req.body.application.ptcNotes,
+						execNotes: req.body.application.execNotes,
+					}; 
+
+					var tempArr = [];
+					if (application.graderReview != null) {
+						tempArr = application.graderReview; //if not an empty array, get the old stuff
+					}
+					tempArr.push(temp); //push the grader review object 
+
+					//return application.update(Application.sanitizeAdminAppReview(req.body.application));
+					return application.update({
+						notes: req.body.application.notes, //public notes
+						//graderReview: application.graderReview.push(temp),
+						graderReview: tempArr,
+					});
 				}
 				else if (application.submitted() && (req.body.application.status === 'SCHEDULE_INTERVIEW' || 
 				req.body.application.status === 'REJECTED')) {
