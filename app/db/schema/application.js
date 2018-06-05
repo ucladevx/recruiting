@@ -82,7 +82,7 @@ module.exports = (Sequelize, db) => {
 			defaultValue: {},
 		},
 
-		graderReview: {
+		graderReviews: {
 			type: Sequelize.ARRAY(Sequelize.JSONB),
 		},
 
@@ -149,8 +149,8 @@ module.exports = (Sequelize, db) => {
 		return profile; // for now don't sanitize
 	};
 
-	Application.sanitizeGraderReview = function(graderReview) {
-		return graderReview;
+	Application.sanitizeGraderReview = function(graderReviews) {
+		return graderReviews;
 	}
 
 	Application.sanitizeAvailability = function(availability) {
@@ -160,7 +160,7 @@ module.exports = (Sequelize, db) => {
 	// sanitize relevant fields for app review
 	Application.sanitizeAdminAppReview = function(review) {
 		//return _.pick(review, ['notes', 'rating', 'status']);
-		return _.pick(review, ['notes', 'rating', 'status']);
+		return _.pick(review, ['notes', 'rating', 'status', 'graderReviews']);
 	};
 
 	// sanitize relevant fields for interview
@@ -171,7 +171,7 @@ module.exports = (Sequelize, db) => {
 
 	// sanitize relevant fields for interview
 	Application.sanitizeAdminScheduleInterview = function(review) {
-		return _.pick(review, ['interviewTime']);
+		return _.pick(review, ['interviewTime', 'graderReviews']);
 	};
 
 	/*********************************
@@ -179,11 +179,11 @@ module.exports = (Sequelize, db) => {
 	 *********************************/
 
 	Application.prototype.getMetaData = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'graderReview'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status'];
 	/*	if (admin)
 			keys.push('notes', 'rating', 'dateSubmitted'); */
 		if (admin)
-			keys.push('notes', 'rating', 'dateSubmitted', 'graderReview');
+			keys.push('notes', 'rating', 'dateSubmitted', 'graderReviews');
 
 		const obj = _.object(keys, keys.map(key => this.getDataValue(key)));
 
@@ -197,11 +197,11 @@ module.exports = (Sequelize, db) => {
 	};
 
 	Application.prototype.getPublic = function(admin) {
-		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'interviewTime', 'availability', 'profile', 'dateSubmitted', 'graderReview'];
+		const keys = ['id', 'user', 'season', 'seasonName', 'status', 'interviewTime', 'availability', 'profile', 'dateSubmitted'];
 		/*if (admin)
 			keys.push('notes', 'rating');*/
 		if (admin)
-			keys.push('notes', 'rating', 'graderReview');
+			keys.push('notes', 'rating', 'graderReviews');
 		if (!admin && (this.rejected() || this.accepted()))
 			keys.push('notes');
 		return _.object(keys, keys.map(key => this.getDataValue(key)));

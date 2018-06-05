@@ -203,7 +203,7 @@ class AdminRoutes {
 
 					var tempArr = [];
 					if (application.graderReview != null) {
-						tempArr = application.graderReview; //if not an empty array, get the old stuff
+						tempArr = application.graderReviews; //if not an empty array, get the old stuff
 					}
 					tempArr.push(temp); //push the grader review object 
 
@@ -211,7 +211,7 @@ class AdminRoutes {
 					return application.update({
 						notes: req.body.application.notes, //public notes
 						//graderReview: application.graderReview.push(temp),
-						graderReview: tempArr,
+						graderReviews: tempArr,
 					});
 				}
 				else if (application.submitted() && (req.body.application.status === 'SCHEDULE_INTERVIEW' || 
