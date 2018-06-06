@@ -192,6 +192,7 @@ class AdminRoutes {
 					//grab the stuff from req.body.application and package it into a variable, add to the array
 					var temp = {
 						graderName: req.body.application.graderName,
+						generalNotes: req.body.application.generalNotes,
 						notes: req.body.application.notes,
 						technicalExperience: req.body.application.technicalExperience,
 						potentialToCollab: req.body.application.potentialToCollab,
@@ -202,7 +203,7 @@ class AdminRoutes {
 					}; 
 
 					var tempArr = [];
-					if (application.graderReview != null) {
+					if (application.graderReviews != null) {
 						tempArr = application.graderReviews; //if not an empty array, get the old stuff
 					}
 					tempArr.push(temp); //push the grader review object 
